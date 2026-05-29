@@ -1,0 +1,9 @@
+click>=8.1.0
+rich>=13.0.0
+yt-dlp>=2024.1.0
+openai-whisper>=20231117
+opencv-python>=4.9.0
+easyocr>=1.7.0
+anthropic>=0.34.0
+python-dotenv>=1.0.0
+numpy>=1.24.0

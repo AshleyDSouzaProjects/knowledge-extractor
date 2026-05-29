@@ -1,0 +1,23 @@
+# Environment
+.env
+.venv/
+
+# Output (local only)
+knowledge-base/
+*.mp4
+*.mp4.part
+*.ytdl
+
+# Skill state (personal metrics and learned examples)
+skills/url_finder/examples.jsonl
+skills/url_finder/metrics.jsonl
+skills/model_tiers.json
+
+# Claude Code local settings
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store

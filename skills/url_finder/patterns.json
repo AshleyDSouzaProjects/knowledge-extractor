@@ -1,0 +1,21 @@
+{
+  "youtube": [
+    "https?://(?:www\\.)?youtube\\.com/watch\\?[^\\s\"'<>]*v=[\\w-]+[^\\s\"'<>]*",
+    "https?://youtu\\.be/[\\w-]+[^\\s\"'<>]*",
+    "https?://(?:www\\.)?youtube\\.com/live/[\\w-]+[^\\s\"'<>]*",
+    "https?://(?:www\\.)?youtube\\.com/shorts/[\\w-]+[^\\s\"'<>]*"
+  ],
+  "twitter": [
+    "https?://(?:www\\.)?(?:twitter|x)\\.com/\\w+/status/\\d+[^\\s\"'<>]*"
+  ],
+  "vimeo": [
+    "https?://(?:www\\.)?vimeo\\.com/\\d+[^\\s\"'<>]*"
+  ],
+  "loom": [
+    "https?://(?:www\\.)?loom\\.com/share/[\\w-]+[^\\s\"'<>]*"
+  ],
+  "linkedin": [
+    "https?://(?:www\\.)?linkedin\\.com/posts/[^\\s\"'<>]*",
+    "https?://(?:www\\.)?linkedin\\.com/feed/update/[^\\s\"'<>]*"
+  ]
+}
