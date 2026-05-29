@@ -158,6 +158,7 @@ def write_obsidian_note(
 def _make_slug(platform: str, title: str) -> str:
     date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
     ascii_title = title.encode("ascii", "ignore").decode("ascii")
-    clean = re.sub(r"[^\w\s-]", "", ascii_title.lower().strip())
+    clean = re.sub(r"https?://\S+", "", ascii_title)   # strip embedded URLs
+    clean = re.sub(r"[^\w\s-]", "", clean.lower().strip())
     clean = re.sub(r"[\s_-]+", "-", clean)[:50].strip("-")
     return f"{platform}-{clean}-{date_str}"
