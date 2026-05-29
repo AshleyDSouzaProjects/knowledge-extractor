@@ -17,6 +17,25 @@ def _notes_dir(slug: str) -> Path:
     return base
 
 
+_LANG_NAMES = {
+    "af": "Afrikaans", "ar": "Arabic", "zh": "Chinese", "cs": "Czech",
+    "da": "Danish", "nl": "Dutch", "fi": "Finnish", "fr": "French",
+    "de": "German", "el": "Greek", "hi": "Hindi", "hu": "Hungarian",
+    "id": "Indonesian", "it": "Italian", "ja": "Japanese", "ko": "Korean",
+    "ms": "Malay", "no": "Norwegian", "fa": "Persian", "pl": "Polish",
+    "pt": "Portuguese", "ro": "Romanian", "ru": "Russian", "es": "Spanish",
+    "sv": "Swedish", "ta": "Tamil", "te": "Telugu", "th": "Thai",
+    "tr": "Turkish", "uk": "Ukrainian", "ur": "Urdu", "vi": "Vietnamese",
+}
+
+
+def _translation_note(language: Optional[str]) -> str:
+    if not language or language == "en":
+        return ""
+    name = _LANG_NAMES.get(language, language.upper())
+    return f"> *Translated from {name} to English*\n\n"
+
+
 def write_knowledge_entry(
     url: str,
     platform: str,
@@ -27,6 +46,7 @@ def write_knowledge_entry(
     summary: dict,
     uploader: Optional[str] = None,
     upload_date: Optional[str] = None,
+    source_language: Optional[str] = None,
 ) -> Path:
     slug = _make_slug(platform, title)
     entry_dir = KNOWLEDGE_BASE / slug
@@ -72,6 +92,7 @@ def write_knowledge_entry(
         f"# Summary: {title}\n\n"
         f"> Source: {url}\n"
         f"> Platform: {platform} | Duration: {f'{duration // 60}m {duration % 60}s' if duration else 'text only'}\n\n"
+        f"{_translation_note(source_language)}"
         f"## Overview\n\n{summary.get('summary', '')}\n\n"
         f"## Key Points\n\n{kp_lines}\n"
         f"{next_steps_section}"
@@ -88,6 +109,7 @@ def write_obsidian_note(
     duration: int,
     summary: dict,
     entry_dir: Path,
+    source_language: Optional[str] = None,
 ) -> Path:
     notes_dir = _notes_dir(entry_dir.name)
     notes_dir.mkdir(parents=True, exist_ok=True)
@@ -115,6 +137,7 @@ def write_obsidian_note(
         f"duration: \"{f'{duration // 60}m {duration % 60}s' if duration else 'text only'}\"\n"
         f"---\n\n"
         f"# {summary.get('title', title)}\n\n"
+        f"{_translation_note(source_language)}"
         f"## Summary\n\n{summary.get('summary', '')}\n\n"
         f"## Key Points\n\n{kp_lines}\n"
         f"{next_steps_section}"

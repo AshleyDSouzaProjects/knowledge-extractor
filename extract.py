@@ -115,6 +115,7 @@ def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
 
         # ── Step 3: Transcribe ────────────────────────────────────────
         transcript_text = ""
+        source_language = None
         if meta:
             est_mins = max(1, meta.duration // 600)
             console.print(
@@ -124,6 +125,7 @@ def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
             try:
                 transcript = transcribe(meta.video_path, starting_model=whisper_model)
                 transcript_text = transcript.text
+                source_language = transcript.language
                 console.print(
                     f"[green]✓[/green] Transcribed with whisper/{transcript.model_used} "
                     f"— {transcript.language}, avg_logprob={transcript.avg_logprob}"
@@ -181,6 +183,7 @@ def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
                 summary=summary,
                 uploader=uploader,
                 upload_date=upload_date,
+                source_language=source_language,
             )
             note_path = write_obsidian_note(
                 url=result.url,
@@ -189,6 +192,7 @@ def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
                 duration=duration,
                 summary=summary,
                 entry_dir=entry_dir,
+                source_language=source_language,
             )
         except Exception as e:
             console.print(f"[red]✗ Failed to write outputs:[/red] {e}")
