@@ -34,6 +34,7 @@ python extract.py --setup            # re-run notes destination wizard
 
 ```
 extract.py                  ← CLI entry point (click + rich)
+extract_thread.py           ← multi-URL thread integration: downloads all parts, combines, one note
 resummary.py                ← re-run summariser on existing KB entries (no re-download)
 skills/
   url_finder/
@@ -106,6 +107,12 @@ Public repo: `https://github.com/AshleyDSouzaProjects/knowledge-extractor`
 - yt-dlp download progress shown live (not captured)
 - Whisper runs silently (`verbose=None`) — no frame-by-frame progress bar
 - FP16 and pin_memory warnings suppressed at startup
+
+### Non-Twitter web pages
+URL finder only recognises video platforms (Twitter, YouTube, etc.) — generic `https://` URLs (vercel, figma, etc.) don't match and cause the interactive URL prompt. Workaround: use `python extract.py -` and paste the URL as stdin, or add the domain to the URL finder patterns.
+
+### EasyOCR stalls on short/silent videos
+Short videos with no audio (e.g. silent craft demos) can cause EasyOCR to hang indefinitely during slide scanning. Use `--skip-slides` as a workaround. Root cause: unknown — may be a MPS/torch interaction on Apple Silicon.
 
 ## What NOT to change without asking
 - The `capture_output` removal on yt-dlp download — user needs to see download progress
