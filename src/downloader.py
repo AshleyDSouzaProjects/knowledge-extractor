@@ -86,6 +86,37 @@ def fetch_tweet_text(url: str) -> str:
         return ""
 
 
+def fetch_page_text(url: str) -> str:
+    """Render the page in a headless browser and extract visible text."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return ""
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.goto(url, wait_until="load", timeout=30000)
+            page.wait_for_timeout(3000)  # allow JS to render content
+
+            # Try specific content selectors first
+            for selector in ["[data-testid='tweetText']", "article", "main"]:
+                els = page.query_selector_all(selector)
+                if els:
+                    text = "\n\n".join(el.inner_text() for el in els).strip()
+                    if len(text) > 100:
+                        browser.close()
+                        return text
+
+            # Generic fallback: full body text
+            text = page.inner_text("body").strip()
+            browser.close()
+            return text if len(text) > 100 else ""
+    except Exception:
+        return ""
+
+
 def _fetch_info(url: str) -> dict:
     result = subprocess.run(
         ["yt-dlp", "--dump-json", "--no-playlist", url],

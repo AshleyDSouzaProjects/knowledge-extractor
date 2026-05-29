@@ -1,6 +1,6 @@
 # Knowledge Extractor
 
-Paste a URL, tweet, email, or LinkedIn post — it finds the video, downloads it, transcribes it, extracts any slide content, summarises with Claude, and writes a structured note to your Obsidian vault or a local folder.
+Paste a URL, tweet, email, or LinkedIn post — extracts knowledge from videos (download + transcribe + OCR slides) or text-only content (tweets, articles, X Notes). Summarises with Claude and writes a structured note to your Obsidian vault or a local folder.
 
 ## Prerequisites
 
@@ -20,6 +20,7 @@ python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
+playwright install chromium    # headless browser for text-only pages (~300MB)
 
 cp .env.example .env
 # Edit .env and add your ANTHROPIC_API_KEY
