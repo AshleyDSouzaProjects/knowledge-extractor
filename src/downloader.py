@@ -1,6 +1,9 @@
 import json
+import re
 import subprocess
+import urllib.request
 from dataclasses import dataclass
+from html import unescape
 from pathlib import Path
 from typing import Optional
 
@@ -59,6 +62,28 @@ def download_video(url: str, output_dir: Path) -> VideoMeta:
         upload_date=upload_date,
         description=description,
     )
+
+
+def fetch_tweet_text(url: str) -> str:
+    """Fetch tweet text via the public oEmbed API (no auth required)."""
+    try:
+        api_url = f"https://publish.twitter.com/oembed?url={url}"
+        with urllib.request.urlopen(api_url, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+        html = data.get("html", "")
+        match = re.search(r"<p[^>]*>(.*?)</p>", html, re.DOTALL)
+        if not match:
+            return ""
+        text = match.group(1)
+        text = re.sub(r"<a[^>]*>(.*?)</a>", r"\1", text)  # links → link text
+        text = re.sub(r"<[^>]+>", "", text)                # strip remaining tags
+        text = unescape(text).strip()
+        # Discard if the only content is a URL (bare link tweet with no text)
+        if re.match(r"^https?://\S+$", text):
+            return ""
+        return text
+    except Exception:
+        return ""
 
 
 def _fetch_info(url: str) -> dict:

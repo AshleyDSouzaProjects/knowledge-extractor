@@ -23,6 +23,7 @@ from src.screen_extractor import extract_screen_content
 from src.summarizer import summarize
 from src.note_writer import write_knowledge_entry, write_obsidian_note
 from src.setup_wizard import needs_setup, run_setup
+from src.downloader import fetch_tweet_text
 
 console = Console()
 
@@ -105,6 +106,9 @@ def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
             )
         except Exception as e:
             console.print(f"[yellow]⚠ No video found — extracting from text only:[/yellow] {e}")
+            if not source_text:
+                console.print("[dim]Fetching post text via oEmbed…[/dim]")
+                source_text = fetch_tweet_text(result.url)
 
         # ── Step 3: Transcribe ────────────────────────────────────────
         transcript_text = ""
@@ -136,7 +140,7 @@ def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
             console.print(f"[green]✓[/green] Screen scan: {label}")
 
         if not transcript_text and not source_text:
-            console.print("[red]✗ No content to summarise (no video and no source text).[/red]")
+            console.print("[red]✗ No content found. Try: python extract.py - (paste content, Ctrl+D to end)[/red]")
             raise SystemExit(1)
 
         # ── Step 5: Summarise ─────────────────────────────────────────
