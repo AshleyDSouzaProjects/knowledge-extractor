@@ -70,4 +70,5 @@ def _fetch_info(url: str) -> dict:
     )
     if result.returncode != 0:
         raise RuntimeError(f"yt-dlp info failed: {result.stderr[:500]}")
-    return json.loads(result.stdout)
+    # stdout may contain one JSON object per line (multi-video threads/carousels)
+    return json.loads(result.stdout.splitlines()[0])
