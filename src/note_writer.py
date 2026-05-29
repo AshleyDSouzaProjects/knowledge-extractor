@@ -47,9 +47,13 @@ def write_knowledge_entry(
     }
     (entry_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
 
-    (entry_dir / "transcript.md").write_text(
-        f"# Transcript: {title}\n\n> Source: {url}\n\n{transcript_text}\n"
-    )
+    if transcript_text:
+        heading = "Transcript" if duration > 0 else "Source Text"
+        (entry_dir / "transcript.md").write_text(
+            f"# {heading}: {title}\n\n> Source: {url}\n\n{transcript_text}\n"
+        )
+    else:
+        (entry_dir / "transcript.md").write_text("# Transcript\n\n_No transcript available._\n")
 
     if slides:
         parts = [f"# Slide Content: {title}\n\n> Source: {url}\n"]
@@ -67,7 +71,7 @@ def write_knowledge_entry(
     (entry_dir / "summary.md").write_text(
         f"# Summary: {title}\n\n"
         f"> Source: {url}\n"
-        f"> Platform: {platform} | Duration: {duration // 60}m {duration % 60}s\n\n"
+        f"> Platform: {platform} | Duration: {f'{duration // 60}m {duration % 60}s' if duration else 'text only'}\n\n"
         f"## Overview\n\n{summary.get('summary', '')}\n\n"
         f"## Key Points\n\n{kp_lines}\n"
         f"{next_steps_section}"
@@ -108,14 +112,14 @@ def write_obsidian_note(
         f"source: \"{url}\"\n"
         f"platform: \"{platform}\"\n"
         f"date: \"{date_str}\"\n"
-        f"duration: \"{duration // 60}m {duration % 60}s\"\n"
+        f"duration: \"{f'{duration // 60}m {duration % 60}s' if duration else 'text only'}\"\n"
         f"---\n\n"
         f"# {summary.get('title', title)}\n\n"
         f"## Summary\n\n{summary.get('summary', '')}\n\n"
         f"## Key Points\n\n{kp_lines}\n"
         f"{next_steps_section}"
         f"## Source\n\n"
-        f"[Original Video]({url})\n\n"
+        f"[Original Source]({url})\n\n"
         f"## Full Knowledge Base\n\n"
         f"- [Transcript]({kb_uri}/transcript.md)\n"
         f"- [Slides]({kb_uri}/slides.md)\n"

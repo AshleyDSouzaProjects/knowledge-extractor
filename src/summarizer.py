@@ -4,7 +4,7 @@ from .claude_utils import call_with_escalation
 
 TASK = "summarizer"
 
-SYSTEM = """You extract structured knowledge from video content. Return ONLY valid JSON:
+SYSTEM = """You extract structured knowledge from content (video, text, or both). Return ONLY valid JSON:
 {
   "title": "clean concise title",
   "summary": "2-3 paragraph summary of the core content and argument",
@@ -29,14 +29,17 @@ def summarize(
     title: str,
     url: str,
     platform: str,
+    source_text: str = "",
 ) -> dict:
-    parts = [f"VIDEO TITLE: {title}", f"PLATFORM: {platform}", f"URL: {url}"]
+    parts = [f"TITLE: {title}", f"PLATFORM: {platform}", f"URL: {url}"]
+    if source_text:
+        parts.append(f"\nSOURCE TEXT (original post/tweet/email):\n{source_text[:2000]}")
     if transcript:
         parts.append(f"\nTRANSCRIPT:\n{transcript[:8000]}")
     if slide_text:
         parts.append(f"\nSLIDE / SCREEN CONTENT:\n{slide_text[:3000]}")
 
-    user_msg = "Summarise this video content into structured knowledge:\n\n" + "\n".join(parts)
+    user_msg = "Summarise this content into structured knowledge:\n\n" + "\n".join(parts)
 
     def make_request(client, model):
         return client.messages.create(

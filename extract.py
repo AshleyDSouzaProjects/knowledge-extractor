@@ -88,40 +88,45 @@ def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
         )
         finder.record_intervention(input_text, result.url, result.source_type)
 
+    # Text from the original post/tweet/email, stripped of the URL
+    source_text = _extract_source_text(input_text, result.url)
+
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
 
-        # ── Step 2: Download ──────────────────────────────────────────
+        # ── Step 2: Download (optional — falls back to text-only) ─────
         console.print("[dim]Downloading video…[/dim]")
+        meta = None
         try:
             meta = download_video(result.url, tmp)
-        except RuntimeError as e:
-            console.print(f"[red]✗ Download failed:[/red] {e}")
-            raise SystemExit(1)
-        console.print(
-            f"[green]✓[/green] Downloaded: [bold]{meta.title}[/bold] "
-            f"({meta.duration // 60}m {meta.duration % 60}s)"
-        )
+            console.print(
+                f"[green]✓[/green] Downloaded: [bold]{meta.title}[/bold] "
+                f"({meta.duration // 60}m {meta.duration % 60}s)"
+            )
+        except Exception as e:
+            console.print(f"[yellow]⚠ No video found — extracting from text only:[/yellow] {e}")
 
         # ── Step 3: Transcribe ────────────────────────────────────────
-        est_mins = max(1, meta.duration // 600)  # rough: ~1 min CPU per 10 min video
-        console.print(
-            f"[dim]Transcribing with whisper/{whisper_model} "
-            f"(~{est_mins}min on CPU for a {meta.duration // 60}min video)…[/dim]"
-        )
-        try:
-            transcript = transcribe(meta.video_path, starting_model=whisper_model)
-        except Exception as e:
-            console.print(f"[red]✗ Transcription failed:[/red] {e}")
-            raise SystemExit(1)
-        console.print(
-            f"[green]✓[/green] Transcribed with whisper/{transcript.model_used} "
-            f"— {transcript.language}, avg_logprob={transcript.avg_logprob}"
-        )
+        transcript_text = ""
+        if meta:
+            est_mins = max(1, meta.duration // 600)
+            console.print(
+                f"[dim]Transcribing with whisper/{whisper_model} "
+                f"(~{est_mins}min on CPU for a {meta.duration // 60}min video)…[/dim]"
+            )
+            try:
+                transcript = transcribe(meta.video_path, starting_model=whisper_model)
+                transcript_text = transcript.text
+                console.print(
+                    f"[green]✓[/green] Transcribed with whisper/{transcript.model_used} "
+                    f"— {transcript.language}, avg_logprob={transcript.avg_logprob}"
+                )
+            except Exception as e:
+                console.print(f"[yellow]⚠ Transcription failed (continuing without):[/yellow] {e}")
 
         # ── Step 4: Screen content ────────────────────────────────────
         slides = []
-        if not skip_slides:
+        if meta and not skip_slides:
             console.print("[dim]Scanning video frames for slide content…[/dim]")
             try:
                 slides = extract_screen_content(meta.video_path)
@@ -130,16 +135,27 @@ def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
             label = f"{len(slides)} slide(s) detected" if slides else "no slides detected"
             console.print(f"[green]✓[/green] Screen scan: {label}")
 
+        if not transcript_text and not source_text:
+            console.print("[red]✗ No content to summarise (no video and no source text).[/red]")
+            raise SystemExit(1)
+
         # ── Step 5: Summarise ─────────────────────────────────────────
         slide_text = "\n\n".join(s.text for s in slides)
+        title = meta.title if meta else (source_text[:60].strip() or "untitled")
+        platform = meta.platform if meta else result.source_type
+        duration = meta.duration if meta else 0
+        uploader = meta.uploader if meta else None
+        upload_date = meta.upload_date if meta else None
+
         console.print("[dim]Summarising with Claude…[/dim]")
         try:
             summary = summarize(
-                transcript=transcript.text,
+                transcript=transcript_text,
                 slide_text=slide_text,
-                title=meta.title,
+                title=title,
                 url=result.url,
-                platform=meta.platform,
+                platform=platform,
+                source_text=source_text,
             )
         except Exception as e:
             console.print(f"[red]✗ Summarisation failed:[/red] {e}")
@@ -150,20 +166,20 @@ def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
         try:
             entry_dir = write_knowledge_entry(
                 url=result.url,
-                platform=meta.platform,
-                title=meta.title,
-                duration=meta.duration,
-                transcript_text=transcript.text,
+                platform=platform,
+                title=title,
+                duration=duration,
+                transcript_text=transcript_text or source_text,
                 slides=slides,
                 summary=summary,
-                uploader=meta.uploader,
-                upload_date=meta.upload_date,
+                uploader=uploader,
+                upload_date=upload_date,
             )
             note_path = write_obsidian_note(
                 url=result.url,
-                platform=meta.platform,
-                title=meta.title,
-                duration=meta.duration,
+                platform=platform,
+                title=title,
+                duration=duration,
                 summary=summary,
                 entry_dir=entry_dir,
             )
@@ -206,6 +222,14 @@ def _print_metrics(finder: URLFinderSkill):
             table.add_row(f"  {src}", f"{counts['auto']}/{counts['total']}", f"{pct}%")
 
     console.print(table)
+
+
+def _extract_source_text(input_text: str, url: str) -> str:
+    """Return the input with URLs stripped — the surrounding post/tweet/email text."""
+    import re as _re
+    text = input_text.replace(url, "")
+    text = _re.sub(r"https?://\S+", "", text).strip()
+    return text
 
 
 def _spinner(label: str):
