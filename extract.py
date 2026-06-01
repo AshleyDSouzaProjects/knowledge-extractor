@@ -40,7 +40,9 @@ console = Console()
 @click.option("--skip-slides", is_flag=True, help="Skip visual slide extraction (faster).")
 @click.option("--metrics", is_flag=True, help="Show URL finder skill metrics and exit.")
 @click.option("--setup", "run_setup_flag", is_flag=True, help="Re-run the notes destination setup wizard.")
-def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
+@click.option("--text-only", "text_only", is_flag=True, help="Skip video URL prompt — for text articles (Substack, LinkedIn, etc.).")
+@click.option("--source-url", "source_url", default="", help="Source URL to embed in note metadata when using --text-only.")
+def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag, text_only, source_url):
     """Extract knowledge from a video.
 
     INPUT_TEXT can be a URL, tweet/email/LinkedIn text, a file path, or - to read stdin.
@@ -79,6 +81,10 @@ def main(input_text, whisper_model, skip_slides, metrics, run_setup_flag):
             f"({result.source_type}): {result.url}"
         )
         finder.record_success(input_text, result.url, result.source_type, result.method)
+    elif text_only:
+        console.print("[dim]Text-only mode — skipping video URL.[/dim]")
+        result.url = source_url
+        result.source_type = "other"
     else:
         console.print("[yellow]Could not find a video URL automatically.[/yellow]")
         result.url = click.prompt("Paste the video URL")
