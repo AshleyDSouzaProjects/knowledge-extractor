@@ -17,6 +17,21 @@ def _notes_dir(slug: str) -> Path:
     return base
 
 
+_PLATFORM_CONFIDENCE = {
+    "twitter": "claimed",
+    "linkedin": "claimed",
+    "youtube": "claimed",
+    "substack": "claimed",
+    "instagram": "claimed",
+    "tiktok": "claimed",
+    "facebook": "claimed",
+    "reddit": "claimed",
+}
+
+def _confidence_from_platform(platform: str) -> str:
+    return _PLATFORM_CONFIDENCE.get(platform.lower(), "raw")
+
+
 _LANG_NAMES = {
     "af": "Afrikaans", "ar": "Arabic", "zh": "Chinese", "cs": "Czech",
     "da": "Danish", "nl": "Dutch", "fi": "Finnish", "fr": "French",
@@ -125,6 +140,7 @@ def write_obsidian_note(
     ns_lines = "".join(f"{i}. {s}\n" for i, s in enumerate(summary.get("next_steps", []), 1))
     next_steps_section = f"## What To Do Next\n\n{ns_lines}\n" if ns_lines else ""
 
+    confidence = _confidence_from_platform(platform)
     note = (
         f"---\n"
         f"tags:\n"
@@ -135,6 +151,7 @@ def write_obsidian_note(
         f"platform: \"{platform}\"\n"
         f"date: \"{date_str}\"\n"
         f"duration: \"{f'{duration // 60}m {duration % 60}s' if duration else 'text only'}\"\n"
+        f"confidence: \"{confidence}\"\n"
         f"---\n\n"
         f"# {summary.get('title', title)}\n\n"
         f"{_translation_note(source_language)}"
