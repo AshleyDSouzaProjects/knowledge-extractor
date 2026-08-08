@@ -21,3 +21,18 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+
+# Ephemeral KUA run scaffolding (one-off scripts, per-run state)
+.agent-status/
+.kua_temp/
+kua_*.py
+kua_*.json
+kua_*.txt
+kua_*.md
+techsenate_part*.md
+x_thread_replies.md
+
+# Stack scan outputs (regenerate with stack_scan.py)
+stack_scan_report.json
+stack_scan_digest.md
+stack_master_index.md
